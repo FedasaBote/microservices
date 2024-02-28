@@ -1,33 +1,48 @@
-## Описание работы 
-# в скобках указано текущее положение для простоты
-В проекте добавлены 3 приложения:
-  1. order - управляет заказкми, организует сагу (лучше выделить отдельный сервис), управляет circuit breaker (обычно его используют отдельно, а лучше в виде прокси), запрашивает кошелек пользователя (логично использовать отдельно)
-  2. Payment - управляет платежом
-  3. Notify - управляет оповещением
+# Project Overview
 
-# Схема
-![Local Image](./circuit_breaker.png)
+Welcome to our project! This README provides an overview of the key components and functionalities.
 
+## Applications
 
-1. Инициализация заказа
-2. Получение заказа Payment service, создание payment
-3. Отправка информации в Order service о payment
-4. Получение информации в Order service о payment
-5. Запрос в кошельке достаточной суммы
-6. Отправка информации о достаточности суммы в Payment service
-7. Выполнение оплаты
-8. Отправка информации о платеже в Order service
-9. Сохранение информации о платеже в Order service
-10. Отправка информации о состоянии платежа в Notify service
-11. Отправка Email
-12. Отправка информация об отправке в Order service
-13. Завершение саги
+1. **Order:**
 
-# на каждом этапе предусмотрены компенсирующие транзакции
+   - Manages orders.
+   - Organizes sagas (consider separating into its own service).
+   - Controls a circuit breaker (usually used independently or as a proxy).
+   - Interacts with the user's wallet (logically separated).
 
-# Описание работы circuit breaker, для работы с очередью слушает отдельную очередь, в которую падают просроченные сообщения.
+2. **Payment:**
 
-  1. В нормальном состоянии (IsClose) сообщения свободно отправляются в брокер
-  2. При получении просроченных сообщений переходит в состояние Half-Open, для задержек перед отправкой
-  3. После нескольких циклов поступающих ошибок в состоянии Half-Open переходит в состояние IsOpen. Перестает принимать сообщения и возвращает ошибку до следующего цикла запуска
-  4. Если ощибок нет в состояниях IsOpen и Half-Open, переходит с каждым циклом в предыдущее состояние IsOpen -> Half-Open -> IsClose.
+   - Handles payment processing.
+
+3. **Notify:**
+   - Manages notifications.
+
+## System Architecture
+
+![System Architecture](./circuit_breaker.png)
+
+1. Order initialization.
+2. Order sends order information to Payment service and creates a payment.
+3. Payment service informs Order service about the payment.
+4. Order service receives payment information.
+5. Wallet balance check.
+6. Payment service receives confirmation of sufficient funds.
+7. Payment execution.
+8. Order service receives payment confirmation.
+9. Order service logs payment information.
+10. Notify service receives payment status information.
+11. Email notification.
+12. Order service logs shipping information.
+13. Saga completion.
+
+## Transaction Safety
+
+Compensating transactions are implemented at each step, ensuring transactional integrity.
+
+## Circuit Breaker Functionality
+
+1. In normal state (IsClose), messages are freely sent to the broker.
+2. Upon receiving expired messages, it transitions to Half-Open state, introducing delays before sending.
+3. After several cycles of recurring errors in Half-Open state, it transitions to IsOpen state. It stops accepting messages and returns an error until the next cycle.
+4. If no errors occur in IsOpen and Half-Open states, it transitions with each cycle to the previous state: IsOpen -> Half-Open -> IsClose.
